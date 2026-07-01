@@ -69,20 +69,41 @@ make -C Debug clean all
 
 构建产物：`Debug/empty_LP_MSPM0G3507_nortos_ticlang.out`（可烧录文件）+ `.map`。
 
-## 架构与控制流程
+## 分层架构
+
+```
+Project/
+├── 0_Doc/                文档（CLAUDE.md、README.md）
+├── 1_HAL/                硬件抽象层（delay.c/h、serial.c/h）
+├── 2_Device/             设备驱动层（Moter.c/h、key.c/h、garyscale.c/h）
+├── 3_Algorithm/          算法层（PID.c/h）
+├── 4_App/                应用层（allcontrol.c/h 主逻辑、empty.c 入口）
+└── 5_Config/             配置（DEFINE.h、empty.syscfg）
+```
 
 ### 模块依赖
 
 ```
-empty.c  main()
-  → system_init() / Control()          (allcontrol.c/h)
-      ├── Moter.c/h                    双路电机 PWM + 方向控制
-      ├── PID.c/h                      位置式 PID 控制器（速度环 + 巡级环）
-      ├── garyscale.c/h                8 通道灰度传感器（自定义串行协议）
-      ├── key.c/h                      3 按键状态机
-      ├── serial.c/h                   UART printf 重定向（调试输出）
-      └── delay.c/h                    阻塞式延时
+4_App/empty.c  main()
+  → system_init() / Control()          (4_App/allcontrol.c/h)
+      ├── 2_Device/Moter.c/h           双路电机 PWM + 方向控制
+      ├── 3_Algorithm/PID.c/h          位置式 PID 控制器（速度环 + 巡线环）
+      ├── 2_Device/garyscale.c/h       8 通道灰度传感器（自定义串行协议）
+      ├── 2_Device/key.c/h             3 按键状态机
+      ├── 1_HAL/serial.c/h             UART printf 重定向（调试输出）
+      └── 1_HAL/delay.c/h              阻塞式延时
 ```
+
+### 构建命令
+
+```bash
+# 命令行构建（从项目根目录）
+make -C Debug clean all    # 清理并全量编译
+make -C Debug all          # 增量编译
+make -C Debug clean        # 清理构建产物
+```
+
+> CCS IDE 构建时点击 ▶️ 按钮即可。`.cproject` 已配置包含路径 `${PROJECT_ROOT}/1_HAL` 到 `${PROJECT_ROOT}/5_Config`。
 
 ### 控制循环（核心，跨多个文件）
 
@@ -155,6 +176,21 @@ empty.c  main()
 - `DEFINE.h`：共享宏（`GET_NTH_BIT`、`SEP_ALL_BIT8` 用于灰度数据位分离）和 `PID_para` 类型别名（= `float`）
 - 灰度传感器：自定义位翻转串行协议 `gw_gray_serial_read()`，CLK 下降沿采样 8 bit
 - 全局状态变量集中在 `allcontrol.c` 定义，通过 `allcontrol.h` 的 `extern` 暴露
+
+## 构建系统注意事项
+
+`Debug/` 下的 makefile 已被**手动修改**以支持分层目录结构：
+
+| 文件 | 作用 | 风险 |
+|---|---|---|
+| `subdir_vars.mk` | 源文件路径列表（`C_SRCS`） | CCS 重新生成时会覆盖为根目录路径 |
+| `subdir_rules.mk` | 编译规则 + `-I` 包含路径 | CCS 重新生成时会丢失子目录规则 |
+| `.cproject` | IDE 包含路径配置 | 添加 `${PROJECT_ROOT}/1_HAL` 到 `/5_Config` |
+
+> ⚠️ 如果通过 CCS 的"重新生成 makefile"功能，上述修改会丢失。此时需重新应用：
+> 1. `subdir_vars.mk` 中 `C_SRCS` 路径加上子目录前缀
+> 2. `subdir_rules.mk` 中添加 4 条 `%.o: ../<layer>/%.c` 模式规则和 `-I"../<layer>"` 包含路径
+> 3. `.cproject` 中添加子目录到 `INCLUDE_PATH`
 
 ## 重要路径
 

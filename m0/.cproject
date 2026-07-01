@@ -38,6 +38,11 @@
                                     <listOptionValue value="${SYSCONFIG_TOOL_INCLUDE_PATH}"/>
                                     <listOptionValue value="${PROJECT_ROOT}"/>
                                     <listOptionValue value="${PROJECT_ROOT}/${ConfigName}"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/1_HAL"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/2_Device"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/3_Algorithm"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/4_App"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/5_Config"/>
                                     <listOptionValue value="${COM_TI_MSPM0_SDK_INSTALL_DIR}/source/third_party/CMSIS/Core/Include"/>
                                     <listOptionValue value="${COM_TI_MSPM0_SDK_INSTALL_DIR}/source"/>
                                 </option>
