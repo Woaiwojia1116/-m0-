@@ -21,6 +21,7 @@ const GPIO8  = GPIO.addInstance();
 const GPIO9  = GPIO.addInstance();
 const GPIO10 = GPIO.addInstance();
 const GPIO11 = GPIO.addInstance();
+const GPIO12 = GPIO.addInstance();
 const PWM    = scripting.addModule("/ti/driverlib/PWM", {}, false);
 const PWM1   = PWM.addInstance();
 const PWM2   = PWM.addInstance();
@@ -111,6 +112,11 @@ GPIO11.associatedPins[1].$name        = "PIN_24";
 GPIO11.associatedPins[1].direction    = "INPUT";
 GPIO11.associatedPins[1].assignedPort = "PORTA";
 
+GPIO12.$name                   = "IIC";
+GPIO12.associatedPins.create(2);
+GPIO12.associatedPins[0].$name = "PIN_8";
+GPIO12.associatedPins[1].$name = "PIN_9";
+
 PWM1.$name                      = "PWM_0";
 PWM1.ccIndex                    = [0];
 PWM1.clockPrescale              = 32;
@@ -155,6 +161,8 @@ GPIO9.associatedPins[0].pin.$suggestSolution  = "PA16";
 GPIO10.associatedPins[0].pin.$suggestSolution = "PA15";
 GPIO11.associatedPins[0].pin.$suggestSolution = "PA14";
 GPIO11.associatedPins[1].pin.$suggestSolution = "PA13";
+GPIO12.associatedPins[0].pin.$suggestSolution = "PB14";
+GPIO12.associatedPins[1].pin.$suggestSolution = "PB16";
 PWM1.peripheral.$suggestSolution              = "TIMG0";
 PWM2.peripheral.$suggestSolution              = "TIMA1";
 PWM2.peripheral.ccp0Pin.$suggestSolution      = "PA10";

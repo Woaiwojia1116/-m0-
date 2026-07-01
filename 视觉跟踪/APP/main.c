@@ -38,8 +38,8 @@ void Emm_Pro(void)
 		over.pid_struct.Actual = ((int)RX_DATA[1] - Center_position_y) * PULSE_PER_UNIT_Y;
 		PID_Pro(&over.pid_struct);
 		PID_Pro(&down.pid_struct);
-		OLED_ShowFloatNum(1, 1, (over.pid_struct.out/15.0), 3, 2, OLED_8X16);
-		OLED_ShowFloatNum(32, 32, (down.pid_struct.out/15.0), 3, 2, OLED_8X16);
+		// OLED_ShowFloatNum(1, 1, (over.pid_struct.out/15.0), 3, 2, OLED_8X16);
+		// OLED_ShowFloatNum(32, 32, (down.pid_struct.out/15.0), 3, 2, OLED_8X16);
 		//设定电机旋转方向
 		if(over.pid_struct.Error0 > 0)
 		{
@@ -62,7 +62,7 @@ void Emm_Pro(void)
 		Emm_V5_Vel_Control(1, over.direction, (uint16_t)(fabs(over.pid_struct.out)/20.0), 1,0);
 		delay_ms(1);//保证数据传输完毕
 		Emm_V5_Vel_Control(2, down.direction, (uint16_t)(fabs(down.pid_struct.out)/20.0), 1,0);
-		OLED_Update();
+		// OLED_Update();
 	}
 	// else if(data_received_flag == 0)
 	// {

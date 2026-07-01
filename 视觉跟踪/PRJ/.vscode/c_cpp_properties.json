@@ -3,14 +3,14 @@
         {
             "name": "STM32_PUL_WHILE",
             "includePath": [
-                "f:\\embedded\\CubeMx+keil\\NORTOS\\STM32_串口通讯__位置模式\\APP",
-                "f:\\embedded\\CubeMx+keil\\NORTOS\\STM32_串口通讯__位置模式\\BSP",
-                "f:\\embedded\\CubeMx+keil\\NORTOS\\STM32_串口通讯__位置模式\\CMSIS",
-                "f:\\embedded\\CubeMx+keil\\NORTOS\\STM32_串口通讯__位置模式\\LIB\\STM32F10x_StdPeriph_Lib_V3.5.0\\inc",
-                "f:\\embedded\\CubeMx+keil\\NORTOS\\STM32_串口通讯__位置模式\\DRIVERS",
+                "f:\\embedded\\diansai_code\\视觉跟踪\\APP",
+                "f:\\embedded\\diansai_code\\视觉跟踪\\BSP",
+                "f:\\embedded\\diansai_code\\视觉跟踪\\CMSIS",
+                "f:\\embedded\\diansai_code\\视觉跟踪\\LIB\\STM32F10x_StdPeriph_Lib_V3.5.0\\inc",
+                "f:\\embedded\\diansai_code\\视觉跟踪\\DRIVERS",
                 "D:\\Keil5\\ARM\\ARMCC\\include",
                 "D:\\Keil5\\ARM\\ARMCC\\include\\rw",
-                "f:\\embedded\\CubeMx+keil\\NORTOS\\STM32_串口通讯__位置模式\\LIB\\STM32F10x_StdPeriph_Lib_V3.5.0\\src"
+                "f:\\embedded\\diansai_code\\视觉跟踪\\LIB\\STM32F10x_StdPeriph_Lib_V3.5.0\\src"
             ],
             "defines": [
                 "USE_STDPERIPH_DRIVER",
