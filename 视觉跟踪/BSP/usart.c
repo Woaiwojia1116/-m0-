@@ -3,58 +3,58 @@
 #include <stdlib.h>
 
 /**********************************************************
-***	Emm_V5.0�����ջ���������
-***	��д���ߣ�ZHANGDATOU
-***	����֧�֣��Ŵ�ͷ�ջ��ŷ�
-***	�Ա����̣�https://zhangdatou.taobao.com
-***	CSDN���ͣ�http s://blog.csdn.net/zhangdatou666
-***	qq����Ⱥ��262438510
+***	Emm_V5.0串口通信底层驱动
+***	编写作者：ZHANGDATOU（张大头）
+***	店铺支持：张大头电子工作室
+***	淘宝店铺：https://zhangdatou.taobao.com
+***	CSDN博客：https://blog.csdn.net/zhangdatou666
+***	QQ技术群：262438510
 **********************************************************/
-#define Count  2+1 //�������ݳ��ȣ���Ϊ��һ�����ղ�������+1
+#define Count  2+1 // 接收数据长度，因为多了一个校验字节+1
 __IO bool rxFrameFlag = false;
 __IO uint8_t rxCmd[FIFO_SIZE] = {0};
 __IO uint8_t rxCount = 0;
 uint8_t RX_buf[RXBUFF] = {0};
 uint16_t RX_DATA[RXBUFF] = {0};//实际接收的数据
-uint8_t usart_flag = 0;//��־�����Ƿ�ɹ�����
+uint8_t usart_flag = 0;//标志位，指示串口数据是否成功接收
 
 /**
-	* @brief   USART1�жϺ���
-	* @param   ��
-	* @retval  ��
+	* @brief   USART1中断处理函数
+	* @param   无
+	* @retval  无
 	*/
 void USART1_IRQHandler(void)
 {
 	__IO uint16_t i = 0;
 
 /**********************************************************
-***	���ڽ����ж�
+***	接收数据中断处理
 **********************************************************/
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
-		// δ���һ֡���ݽ��գ����ݽ��뻺�����
+		// 如果一帧数据还没接收完，将数据存入环形缓冲区
 		fifo_enQueue((uint8_t)USART1->DR);
 
-		// ������ڽ����ж�?
+		// 清除接收中断标志位
 		USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 	}
 
 /**********************************************************
-***	���ڿ����ж�
+***	总线空闲中断处理（检测一帧数据结束）
 **********************************************************/
 	else if(USART_GetITStatus(USART1, USART_IT_IDLE) != RESET)
 	{
-		// �ȶ�SR�ٶ�DR�����IDLE�ж�
+		// 先读SR再读DR，清除IDLE空闲中断标志
 		USART1->SR; USART1->DR;
 
-		// ��ȡһ֡��������
+		// 从环形缓冲区读取一帧数据
 		rxCount = fifo_queueLength(); for(i=0; i < rxCount; i++) { rxCmd[i] = fifo_deQueue(); }
 
-		// һ֡���ݽ�����ɣ���λ֡��־�?
+		// 一帧数据接收完成，置位帧标志
 		rxFrameFlag = true;
 	}
 }
-void USART2_IRQHandler(void)//k230返回的数据处理函数
+void USART2_IRQHandler(void)//K230返回的数据处理函数
 {
 	uint8_t RX_tem = 0;
 	static uint8_t rx_state = 0;
@@ -109,21 +109,22 @@ uint8_t usart2_get_complete(void)
 	return temp;
 }
 /**
-	* @brief   USART���Ͷ���ֽ�?
-	* @param   ��
-	* @retval  ��
+	* @brief   USART发送多个字节
+	* @param   无
+	* @retval  无
 	*/
 void usart_SendCmd(__IO uint8_t *cmd, uint8_t len)
 {
 	__IO uint8_t i = 0;
 	
 	for(i=0; i < len; i++) { usart_SendByte(cmd[i]); }
+	// while(!(USART1->SR & USART_SR_TC));
 }
 
 /**
-	* @brief   USART����һ���ֽ�
-	* @param   ��
-	* @retval  ��
+	* @brief   USART发送一个字节
+	* @param   无
+	* @retval  无
 */
 void usart_SendByte(uint16_t data)
 {
@@ -136,5 +137,3 @@ void usart_SendByte(uint16_t data)
 		++t0; if(t0 > 8000)	{	return; }
 	}
 }
-
-

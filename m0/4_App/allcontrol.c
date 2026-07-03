@@ -1,10 +1,12 @@
 #include "allcontrol.h"
 
-
 PID V_PID;//速度环
-PID xunji_PID;//循迹环
+PID xunji_PID;//IR环
+
+
 PID_para xunji[3] = {0,0,0};
 PID_para _speed[3] = {1,1,0};
+PID_para _Gyroscope[3] = {1,1,0};
 static uint16_t speed_slow = 0;
 // #define Moter_Encoder 110 //电机转一圈编码器输入脉冲110个，也就是转速
 float _v = 0;//左速度
@@ -20,6 +22,7 @@ uint8_t grayRet;//八路灰度读取值
 
 uint32_t Encoder1_sum;//编码器1总值
 uint32_t Encoder2_sum;//编码器2总值
+
 
 void system_init(void)
 {
@@ -43,7 +46,14 @@ void Control(void)
 {
     clickKey();
     //按键逻辑判断
-    
+    if(key[0].singleFlag==1)
+    {
+
+    }
+    if(key[1].singleFlag==1)
+    {
+
+    }
     Moter_para[0] = V_PID.out+xunji_PID.out;
     Moter_para[1] = V_PID.out-xunji_PID.out;
     Moter_setSpeed1(Moter_para[0],Moter_para[1]);

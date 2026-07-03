@@ -33,6 +33,22 @@ void Emm_Pro(void)
 {
 	if(usart2_get_complete() == 1)
 	{
+		// 识别不到目标时（摄像头返回65535），急停电机，不进行PID计算
+		if(RX_DATA[0] == 65535 && RX_DATA[1] == 65535)
+		{
+			Emm_V5_Stop_Now(1, 0);	// over（水平/X 轴）
+			delay_ms(1);
+			Emm_V5_Stop_Now(2, 0);	// down（垂直/Y 轴）
+			// 清除PID历史，防止目标重现时积分windup冲击
+			over.pid_struct.Errorsum = 0;
+			over.pid_struct.Error1 = 0;
+			over.pid_struct.out = 0;
+			down.pid_struct.Errorsum = 0;
+			down.pid_struct.Error1 = 0;
+			down.pid_struct.out = 0;
+			return;
+		}
+
 		data_received_flag = 1;  // 收到数据，置位标志
 		down.pid_struct.Actual = ((int)RX_DATA[0] - Center_position_x) * PULSE_PER_UNIT_X;
 		over.pid_struct.Actual = ((int)RX_DATA[1] - Center_position_y) * PULSE_PER_UNIT_Y;

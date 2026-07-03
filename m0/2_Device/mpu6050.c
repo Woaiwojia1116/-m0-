@@ -1,7 +1,13 @@
 #include "IIC.h"
 #include "mpu6050reg.h"
 #include "mpu6050.h"
+
 #define MPU6050_ADRESS 0xD0
+MPU6050 tracking_date;
+float Angle_ACC = 0;
+float Angle_Gyro = 0;
+float Angle = 0;
+PID Gyroscope_PID;//陀螺仪环
 void MPU6050_Write(uint8_t RegAdress,uint8_t Data)
 {
 	MyIIc_Start();
@@ -57,4 +63,12 @@ void MPU6050_GetData(MPU6050 *MPU6050_Data)
 	MPU6050_Data->Gyroy  = (data[10]<<8)|data[11];
 	MPU6050_Data->Gyroz  = (data[12]<<8)|data[13];
 }
+void Mpu6050_forward(void)
+{
+	MPU6050_GetData(&tracking_date);
+	Angle_ACC = -atan2((float)tracking_date.Accx,(float)tracking_date.Accy)/3.14159*180;
+	Angle_Gyro = Angle + tracking_date.Gyroz/32768.0*2000*0.01;
 
+	Angle = Alpha*(Angle_ACC-Angle_Gyro) + Angle_Gyro;
+	
+}
