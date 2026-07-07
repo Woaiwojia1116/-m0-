@@ -52,6 +52,12 @@ EventRecorderStub.scvd
 # ---- Keil ----
 *.uvguix.*
 
+GIT协作指南.md
+CLAUDE.md
+AGENTS.md
+
+视觉跟踪/CLAUDE.md
+m0/CLAUDE.md
 # ---- CCS 自动生成的 README ----
 README.html
 

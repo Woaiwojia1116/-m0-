@@ -112,14 +112,18 @@ GPIO11.associatedPins[1].$name        = "PIN_24";
 GPIO11.associatedPins[1].direction    = "INPUT";
 GPIO11.associatedPins[1].assignedPort = "PORTA";
 
-GPIO12.$name                          = "IIC";
+GPIO12.$name                          = "MPU6050";
 GPIO12.associatedPins.create(2);
-GPIO12.associatedPins[0].$name        = "PIN_8";
-GPIO12.associatedPins[0].initialValue = "SET";
+GPIO12.associatedPins[0].$name        = "SCL";
+GPIO12.associatedPins[0].assignedPort = "PORTA";
 GPIO12.associatedPins[0].ioStructure  = "OD";
-GPIO12.associatedPins[1].$name        = "PIN_9";
+GPIO12.associatedPins[0].initialValue = "SET";
+GPIO12.associatedPins[0].assignedPin  = "1";
+GPIO12.associatedPins[1].$name        = "SDA";
 GPIO12.associatedPins[1].initialValue = "SET";
 GPIO12.associatedPins[1].ioStructure  = "OD";
+GPIO12.associatedPins[1].assignedPort = "PORTA";
+GPIO12.associatedPins[1].assignedPin  = "0";
 
 PWM1.$name                      = "PWM_0";
 PWM1.ccIndex                    = [0];

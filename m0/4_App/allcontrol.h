@@ -5,15 +5,21 @@
 #include "PID.h"
 #include "ti_msp_dl_config.h"
 #include "key.h"
-#include "PID.h"
 #include "Moter.h"
-#include "serial.h"//调用时记得修改重定向的fputs
+#include "serial.h"
 #include "garyscale.h"
 #include "mpu6050.h"
+#include "qmc5883l.h"
 
-extern PID xunji_PID;//循迹环
+extern PID xunji_PID;       // 循迹环
+extern PID Gyro_PID;        // 角度偏差环（陀螺仪z轴角速度闭环）
+extern float gyro_z_offset; // 陀螺仪z轴零偏（仅供调试观测）
+
 void system_init(void);
 void Control(void);
-void PID_control(void);
+void gray_read(void);
+void xunji_process(void);
+void pid_control_call(void);
+void mpu6050_read(void);
 
 #endif

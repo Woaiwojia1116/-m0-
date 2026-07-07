@@ -27,7 +27,7 @@ typedef struct
 Elecchicken over;           // 横向电机结构体
 Elecchicken down;           // 纵向电机结构体
 
-uint8_t data_received_flag = 0;  // 标记是否曾收到过摄像头数据
+// uint8_t data_received_flag = 0;  // 标记是否曾收到过摄像头数据
 
 void Emm_Pro(void)
 {
@@ -49,7 +49,7 @@ void Emm_Pro(void)
 			return;
 		}
 
-		data_received_flag = 1;  // 收到数据，置位标志
+		// data_received_flag = 1;  // 收到数据，置位标志
 		down.pid_struct.Actual = ((int)RX_DATA[0] - Center_position_x) * PULSE_PER_UNIT_X;
 		over.pid_struct.Actual = ((int)RX_DATA[1] - Center_position_y) * PULSE_PER_UNIT_Y;
 		PID_Pro(&over.pid_struct);
