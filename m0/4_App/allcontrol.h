@@ -10,6 +10,7 @@
 #include "garyscale.h"
 #include "mpu6050.h"
 #include "qmc5883l.h"
+#include "OLED.h"
 
 extern PID xunji_PID;       // 循迹环
 extern PID Gyro_PID;        // 角度偏差环（陀螺仪z轴角速度闭环）
@@ -21,5 +22,6 @@ void gray_read(void);
 void xunji_process(void);
 void pid_control_call(void);
 void mpu6050_read(void);
+void oled_display(void);
 
 #endif

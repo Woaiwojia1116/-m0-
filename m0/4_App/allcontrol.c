@@ -1,5 +1,6 @@
 #include "allcontrol.h"
 #include "delay.h"
+#include "OLED.h"
 #include <stdio.h>
 
 PID V_PID;              // 速度环（位置式PID，Target=0，Actual=左右轮速平均值）
@@ -11,6 +12,7 @@ PID_para _speed[3] = {1,1,0};   // 循迹环实际使用的PID参数
 PID_para _angle[3] = {0,0,0};   // 角度偏差环PID参数
 
 static uint16_t speed_slow = 0;
+static uint16_t oled_slow  = 0; // OLED 显示刷新计数（50ms 周期）
 
 float _v  = 0;          // 左轮速度
 float _v2 = 0;          // 右轮速度
@@ -39,7 +41,8 @@ typedef union
         uint8_t gray_flag    : 1;   // 灰度读取标志（bit1）
         uint8_t xunji_flag   : 1;   // 循迹处理标志（bit2）
         uint8_t pid_flag     : 1;   // PID控制标志（bit3）
-        uint8_t reserved     : 4;   // 保留（bit4~7）
+        uint8_t oled_flag    : 1;   // OLED显示刷新标志（bit4）
+        uint8_t reserved     : 3;   // 保留（bit5~7）
     }bits;
 } TIME_FLAG;
 TIME_FLAG T = {0};
@@ -72,6 +75,7 @@ void system_init(void)
     NVIC_EnableIRQ(ENCODERA2_INT_IRQN);
 
     Moter_Init();
+    OLED_Init();
 
     PID_Init(&V_PID,   _speed, 0, 100, -100);   // 速度环
     PID_Init(&xunji_PID, xunji, 0, 100, -100);  // 循迹环
@@ -167,6 +171,30 @@ void mpu6050_read(void)
 }
 
 /**
+ * @brief OLED 显示刷新（主循环轮询调用）
+ *        每 50ms 刷新一次，显示关键数据
+ */
+void oled_display(void)
+{
+    if (T.bits.oled_flag)
+    {
+        T.bits.oled_flag = 0;
+
+        oled_slow++;
+        if (oled_slow >= 50)   // 50ms 刷新一次（约 20Hz）
+        {
+            oled_slow = 0;
+
+            OLED_Clear();
+
+            OLED_ShowNum(1,1,12,3,OLED_8X16);
+
+            OLED_Update();
+        }
+    }
+}
+
+/**
  * @brief 主控制循环
  */
 void Control(void)
@@ -175,6 +203,7 @@ void Control(void)
     xunji_process();
     pid_control_call();
     mpu6050_read();
+    oled_display();
 
     serial_printf("%f\r\n", angle_diff);
 
@@ -215,7 +244,7 @@ void TIMER_0_INST_IRQHandler(void)
     switch (DL_TimerA_getPendingInterrupt(TIMER_0_INST))
     {
         case DL_TIMER_IIDX_ZERO:
-            T.flags |= 0x0F;    // 置 bit0~3：mpu6050_flag | gray_flag | xunji_flag | pid_flag
+            T.flags |= 0x1F;    // 置 bit0~4：mpu6050 | gray | xunji | pid | oled
             break;
         default:
             break;
