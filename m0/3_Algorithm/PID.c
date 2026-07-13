@@ -4,7 +4,7 @@
 #include <math.h>
 
 
-void PID_Init(PID *pid,PID_para *PID,uint16_t target,uint16_t max,uint8_t min)
+void PID_Init(PID *pid,PID_para *PID,uint16_t target,float max,float min)
 {
 	if(!PID||!pid)
 		return;
@@ -27,7 +27,7 @@ void PID_Init(PID *pid,PID_para *PID,uint16_t target,uint16_t max,uint8_t min)
 	*@param PID structure
 	*@retval  None
 */
-void PID_Pro(PID *test)
+void PID_Pro(PID *test,uint8_t flag)
 {
 		// float difout = test->Kd * (test->Actual - test->Actual_old); 
 		test->Error1 = test->Error0;
@@ -38,12 +38,15 @@ void PID_Pro(PID *test)
 		// }
 		// else
 		// {
+		if(!flag)
+		{
 			if(fabs(test->Error0)<60)   //积分分离，防止Ki的超调
 			{
 				test->Errorsum += test->Error0; 
 			}
 			else
-				test->Errorsum = 0;
+				test->Errorsum = 0;			
+		}
 			if(test->Errorsum>500)
             {
                 (test->Errorsum = 500);    //积分限幅
@@ -56,8 +59,14 @@ void PID_Pro(PID *test)
 			
 	//		test->out = test->Kp * test->Error0 + test->Ki * test->Errorsum + difout;  //微分先行
 			
-			if(test->out>test->max)(test->out = test->max);
-			if(test->out<test->min)(test->out = test->min);			
+			if(test->out>test->max)
+			{
+				test->out = test->max;
+			}
+			if(test->out<test->min)
+			{
+				test->out = test->min;
+			}		
 		// }
         
 }

@@ -17,7 +17,7 @@ typedef struct
 	float max;
 	float min;
 }PID;
-void PID_Pro(PID *test);
+void PID_Pro(PID *test,uint8_t flag);
 /**
 	*@brief	PID初始化
 	*@param PID 结构体
@@ -26,5 +26,5 @@ void PID_Pro(PID *test);
 	*@param 上限
 	*@param 下限
 */
-void PID_Init(PID *pid,PID_para *PID,uint16_t target,uint16_t max,uint8_t min);
+void PID_Init(PID *pid,PID_para *PID,uint16_t target,float max,float min);
 #endif

@@ -99,7 +99,7 @@ void OLED_W_SCL(uint8_t BitValue)
     } else {
         DL_GPIO_setPins(OLED_PORT, OLED_OELD_SCL_PIN);    // 拉高
     }
-	delay_us(5);
+	delay_us(2);
 }
 
 /**
@@ -114,7 +114,7 @@ void OLED_W_SDA(uint8_t BitValue)
     } else {
         DL_GPIO_setPins(OLED_PORT, OLED_OLED_SDA_PIN);    // 拉高
     }
-	delay_us(5);
+	delay_us(2);
 }
 
 /**

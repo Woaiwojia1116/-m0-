@@ -1,33 +1,131 @@
 #include "key.h"
 
+/* 3 路按键硬件定义（按下为 0，与 SysConfig 中上拉配置一致） */
 Key key[3] = {0};
 
-void clickKey (void)
+/* 状态机状态 */
+typedef enum {
+    KEY_STATE_IDLE,            // 空闲态
+    KEY_STATE_SHAKE,           // 按下消抖态
+    KEY_STATE_PRESSED,         // 按下态
+    KEY_STATE_RELEASE_SHAKE    // 释放消抖态
+} key_state_t;
+
+/* 各按键独立状态机（下标 0~2 对应 key[0]~key[2]） */
+static key_state_t s_key_state[3] = {0};
+
+/* 按键长按阈值（调用周期约 1ms 时 100 ≈ 100ms） */
+#define KEY_LONG_PRESS_THRESHOLD  100
+/* 消抖确认次数（调用周期约 1ms 时 3 ≈ 3ms） */
+#define KEY_DEBOUNCE_THRESHOLD    3
+
+/**
+ * @brief  读取第 idx 路按键的原始电平（按下=0，释放=1）
+ * @param  idx 按键下标 0~2
+ * @return 1=释放, 0=按下
+ */
+static inline uint8_t key_read_pin(uint8_t idx)
 {
-	key[0].keyState=!DL_GPIO_readPins(KEY_PIN_8_PORT,KEY_PIN_8_PIN);//按下为0,此时keystate为1
-	key[1].keyState=!DL_GPIO_readPins(KEY_PIN_9_PORT,KEY_PIN_9_PIN);//按下为0,此时keystate为1
-	key[2].keyState=!DL_GPIO_readPins(KEY_PIN_10_PORT,KEY_PIN_10_PIN);//按下为0,此时keystate为1
-	for(int i=0;i<3;i++)
-	{
-		switch(key[i].state)
-		{
-			case 0:
-			if(key[i].keyState)key[i].state=1;
-				break;
-			case 1:
-			if(key[i].keyState)key[i].state=2;
-			else
-			{
-				key[i].state=0;
-			}
-			break;
-			case 2:
-				if(!key[i].keyState)
-				{
-					key[i].state=0;
-					key[i].singleFlag=1;
-				}
-				break;
-		}
-	}
+    switch (idx)
+    {
+        case 0: return !DL_GPIO_readPins(KEY_PIN_8_PORT,  KEY_PIN_8_PIN);
+        case 1: return !DL_GPIO_readPins(KEY_PIN_9_PORT,  KEY_PIN_9_PIN);
+        case 2: return !DL_GPIO_readPins(KEY_PIN_10_PORT, KEY_PIN_10_PIN);
+        default: return 1;
+    }
 }
+
+/**
+ * @brief  按键扫描状态机
+ * @return 本次扫描产生的按键事件
+ * @note   - 产生 KEY_EVENT_SHORT_PRESS 时同步置位对应 key[i].singleFlag
+ *         - 原为单路移植：循环展开到 3 路，每路独立状态机与计数器
+ */
+void key_scan(KeyEvent_t * k)
+{
+    static KeyEvent_t event[3] = {0};
+    uint8_t i;
+
+    for (i = 0; i < 3; i++)
+    {
+        key[i].keyState = key_read_pin(i);
+
+        switch (s_key_state[i])
+        {
+            case KEY_STATE_IDLE:
+                if (key[i].keyState == 0)   // 检测到下降沿（按下）
+                {
+                    s_key_state[i] = KEY_STATE_SHAKE;
+                }
+                break;
+
+            case KEY_STATE_SHAKE:
+                if (key[i].keyState == 0)
+                {
+                    key[i].debounce_cnt++;
+                    if (key[i].debounce_cnt >= KEY_DEBOUNCE_THRESHOLD)
+                    {
+                        s_key_state[i] = KEY_STATE_PRESSED;
+                        key[i].debounce_cnt = 0;
+                        event[i] = KEY_EVENT_PRESSED;
+                    }
+                }
+                else
+                {
+                    /* 抖动，回到空闲 */
+                    key[i].debounce_cnt = 0;
+                    s_key_state[i] = KEY_STATE_IDLE;
+                }
+                break;
+
+            case KEY_STATE_PRESSED:
+                /* 长按计数与释放检测 */
+                key[i].long_press_cnt++;
+
+                if (key[i].keyState == 1)   // 检测到上升沿（释放）
+                {
+                    s_key_state[i] = KEY_STATE_RELEASE_SHAKE;
+                    key[i].long_press_cnt = 0;
+                }
+
+                if (key[i].long_press_cnt >= KEY_LONG_PRESS_THRESHOLD)
+                {
+                    event[i] = KEY_EVENT_LONG_PRESS;
+                    key[i].long_press_cnt = 0;
+                }
+                break;
+
+            case KEY_STATE_RELEASE_SHAKE:
+                if (key[i].keyState == 1)
+                {
+                    key[i].debounce_cnt++;
+                    if (key[i].debounce_cnt >= KEY_DEBOUNCE_THRESHOLD)
+                    {
+                        s_key_state[i] = KEY_STATE_IDLE;
+                        key[i].debounce_cnt = 0;
+
+                        /* 未达到长按阈值 → 判定为短按 */
+                        if (key[i].long_press_cnt < KEY_LONG_PRESS_THRESHOLD)
+                        {
+                            event[i] = KEY_EVENT_SHORT_PRESS;
+                            key[i].singleFlag = 1;   // 兼容旧接口
+                        }
+                    }
+                }
+                else
+                {
+                    /* 抖动，回到按下态 */
+                    key[i].debounce_cnt = 0;
+                    s_key_state[i] = KEY_STATE_PRESSED;
+                }
+                break;
+
+            default:
+                s_key_state[i] = KEY_STATE_IDLE;
+                break;
+        }
+    }
+
+}
+
+
