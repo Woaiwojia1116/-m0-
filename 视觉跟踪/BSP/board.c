@@ -113,7 +113,7 @@ void usart2_init(void)
 ***	��ʼ��USART2
 **********************************************************/
 	USART_InitTypeDef USART_InitStructure;
-	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_BaudRate = 460800;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -131,6 +131,7 @@ void usart2_init(void)
 ***	ʹ��USART2�ж�
 **********************************************************/	
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 
 	NVIC_InitTypeDef NVIC_InitStructure;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;

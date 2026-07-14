@@ -10,13 +10,18 @@
 ***	CSDN博客：https://blog.csdn.net/zhangdatou666
 ***	QQ技术群：262438510
 **********************************************************/
-#define Count  2+1 // 接收数据长度，因为多了一个校验字节+1
+
+
+
 __IO bool rxFrameFlag = false;
 __IO uint8_t rxCmd[FIFO_SIZE] = {0};
 __IO uint8_t rxCount = 0;
-uint8_t RX_buf[RXBUFF] = {0};
-uint16_t RX_DATA[RXBUFF] = {0};//实际接收的数据
-uint8_t usart_flag = 0;//标志位，指示串口数据是否成功接收
+
+uint8_t uart2_buf[UART2_BUF_SIZE] = {0};
+volatile uint8_t uart2_buf_head = 0;
+volatile uint8_t uart2_buf_tail = 0;
+
+
 
 /**
 	* @brief   USART1中断处理函数
@@ -57,57 +62,26 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)//K230返回的数据处理函数
 {
 	uint8_t RX_tem = 0;
-	static uint8_t rx_state = 0;
-	static uint8_t count = 0;
+	uint8_t next_head = 0;
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
 	{
 		RX_tem = USART_ReceiveData(USART2);
-		if(rx_state == 0 )
+
+		next_head = (uart2_buf_head + 1) % UART2_BUF_SIZE;
+		if(next_head != uart2_buf_tail)
 		{
-			if(RX_tem == 0x55)
-			{
-				rx_state = 1;
-			}
-		}
-		else if(rx_state == 1)
-		{
-			if(RX_tem == 0xaa)
-			{
-				rx_state = 2;
-			}
-			else
-			{
-				rx_state = 0;
-				memset(RX_buf,0,sizeof(RX_buf)/sizeof(RX_buf[0]));
-			}
-		}else if(rx_state == 2)
-		{
-			RX_buf[count++] = RX_tem;
-			if(count == 4)
-			{
-				RX_DATA[0] = (RX_buf[0]<<8)|RX_buf[1];
-				RX_DATA[1] = (RX_buf[2]<<8)|RX_buf[3];
-				count = 0;
-				rx_state = 3;
-			}
-		}
-		else if(rx_state == 3)
-		{
-			if(RX_tem == 0xfa)
-			{
-				usart_flag = 1;
-			}
-			rx_state = 0;
+			uart2_buf[uart2_buf_head] = RX_tem;
+			uart2_buf_head = next_head;
 		}
 		USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 	}
 }
-uint8_t usart2_get_complete(void)
-{
-	uint8_t temp = usart_flag;
-	usart_flag = 0;
-	return temp;
-}
+// uint8_t usart2_get_complete(void)
+// {
+// 	uint8_t temp = usart_flag;
+// 	usart_flag = 0;
+// 	return temp;
+// }
 /**
 	* @brief   USART发送多个字节
 	* @param   无
@@ -118,7 +92,7 @@ void usart_SendCmd(__IO uint8_t *cmd, uint8_t len)
 	__IO uint8_t i = 0;
 	
 	for(i=0; i < len; i++) { usart_SendByte(cmd[i]); }
-	// while(!(USART1->SR & USART_SR_TC));
+	while(!(USART1->SR & USART_SR_TC));
 }
 
 /**

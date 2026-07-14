@@ -27,12 +27,16 @@ typedef struct
 Elecchicken over;           // 横向电机结构体
 Elecchicken down;           // 纵向电机结构体
 
-// uint8_t data_received_flag = 0;  // 标记是否曾收到过摄像头数据
+uint16_t RX_DATA[RXBUFF] = {0};//实际接收的数据
+uint8_t RX_buf[RXBUFF] = {0};  // 接收数据缓存
+uint8_t usart_flag = 0;       // 标志位，指示串口数据是否成功接收
+
 
 void Emm_Pro(void)
 {
-	if(usart2_get_complete() == 1)
+	if(usart_flag)
 	{
+		usart_flag = 0;
 		// 识别不到目标时（摄像头返回65535），急停电机，不进行PID计算
 		if(RX_DATA[0] == 65535 && RX_DATA[1] == 65535)
 		{
@@ -56,7 +60,7 @@ void Emm_Pro(void)
 		PID_Pro(&down.pid_struct);
 		// OLED_ShowFloatNum(1, 1, (over.pid_struct.out/15.0), 3, 2, OLED_8X16);
 		// OLED_ShowFloatNum(32, 32, (down.pid_struct.out/15.0), 3, 2, OLED_8X16);
-		//设定电机旋转方向
+		// 设定电机旋转方向
 		if(over.pid_struct.Error0 > 0)
 		{
 			over.direction = 0;
@@ -76,17 +80,58 @@ void Emm_Pro(void)
 		}
 
 		Emm_V5_Vel_Control(1, over.direction, (uint16_t)(fabs(over.pid_struct.out)/20.0), 1,0);
-		delay_ms(1);//保证数据传输完毕
+		// delay_ms(1);//保证数据传输完毕
 		Emm_V5_Vel_Control(2, down.direction, (uint16_t)(fabs(down.pid_struct.out)/20.0), 1,0);
 		// OLED_Update();
 	}
-	// else if(data_received_flag == 0)
-	// {
-	// 	// 从未收到过数据，电机停止在当前位置
-	// 	Emm_V5_Stop_Now(1, 0);
-	// 	delay_ms(1);
-	// 	Emm_V5_Stop_Now(2, 0);
-	// }
+}
+void uart2_parse_frame(void)
+{
+	static uint8_t rx_state = 0;
+	static uint8_t count = 0;
+
+	uint8_t RX_tem = 0;
+	while(uart2_buf_head != uart2_buf_tail)
+	{
+		RX_tem = uart2_buf[uart2_buf_tail];
+		uart2_buf_tail = (uart2_buf_tail + 1) % UART2_BUF_SIZE;
+		if(rx_state == 0 )
+		{
+			if(RX_tem == 0x55)
+			{
+				rx_state = 1;
+			}
+		}
+		else if(rx_state == 1)
+		{
+			if(RX_tem == 0xaa)
+			{
+				rx_state = 2;
+			}
+			else
+			{
+				rx_state = 0;
+			}
+		}else if(rx_state == 2)
+		{
+			RX_buf[count++] = RX_tem;
+			if(count == 4)
+			{
+				RX_DATA[0] = (RX_buf[0]<<8)|RX_buf[1];
+				RX_DATA[1] = (RX_buf[2]<<8)|RX_buf[3];
+				count = 0;
+				rx_state = 3;
+			}
+		}
+		else if(rx_state == 3)
+		{
+			if(RX_tem == 0xfa)
+			{
+				usart_flag = 1;
+			}
+			rx_state = 0;
+		}
+	}
 }
 
 /**
@@ -116,7 +161,8 @@ int main(void)
 
 	while(1)
 	{
+		uart2_parse_frame();
 		Emm_Pro();
-		delay_ms(7);
+		// delay_ms(7);
 	}
 }
