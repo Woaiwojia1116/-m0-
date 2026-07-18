@@ -92,7 +92,6 @@ void usart_SendCmd(__IO uint8_t *cmd, uint8_t len)
 	__IO uint8_t i = 0;
 	
 	for(i=0; i < len; i++) { usart_SendByte(cmd[i]); }
-	while(!(USART1->SR & USART_SR_TC));
 }
 
 /**

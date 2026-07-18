@@ -131,7 +131,6 @@ void usart2_init(void)
 ***	ʹ��USART2�ж�
 **********************************************************/	
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
-	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 
 	NVIC_InitTypeDef NVIC_InitStructure;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
