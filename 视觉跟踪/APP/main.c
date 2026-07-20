@@ -57,8 +57,8 @@ static inline int16_t lut_cos(uint8_t a) { return sin_lut[(a + 64) & 0xFF]; } /*
 #define PULSE_PER_UNIT_X  ((float)(PULSE_PER_REV/2) / SENSOR_X_MAX)  /* = 2.5 */
 #define PULSE_PER_UNIT_Y  ((float)(PULSE_PER_REV/2) / SENSOR_Y_MAX)  /* = 3.333 */
 
-PID_para PID_para_x[3] = {0.5,0.1,0};  // X轴PID参数
-PID_para PID_para_y[3] = {0.5,0.1,0};  // Y轴PID参数
+PID_para PID_para_x[3] = {0.5,0,0.1};  // X轴PID参数
+PID_para PID_para_y[3] = {0.65,0,0.12};  // Y轴PID参数
 
 /* === TEST BEGIN =====
    测试控制变量：每 7ms 累加一个 256 周期的圆周相角约 0.73°，
