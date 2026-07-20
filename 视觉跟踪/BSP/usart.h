@@ -18,6 +18,7 @@ extern __IO bool rxFrameFlag;
 extern __IO uint8_t rxCmd[FIFO_SIZE];
 extern __IO uint8_t rxCount;
 extern uint16_t RX_DATA[RXBUFF];
+extern uint8_t usart_flag;
 
 extern volatile uint8_t uart2_buf_head ;
 extern volatile uint8_t uart2_buf_tail;
