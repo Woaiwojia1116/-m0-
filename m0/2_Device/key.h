@@ -2,27 +2,30 @@
 #define __KEY_H
 
 #include <stdint.h>
+
+#ifdef KEY_TEST
+#include "mock_gpio.h"
+#else
 #include "ti_msp_dl_config.h"
+#endif
 
 /* 按键事件类型 */
 typedef enum {
     KEY_EVENT_NONE = 0,      // 无事件
-    KEY_EVENT_PRESSED,       // 按下（瞬间）
-    KEY_EVENT_RELEASED,      // 释放（瞬间）
     KEY_EVENT_SHORT_PRESS,   // 短按（按下后释放）
     KEY_EVENT_LONG_PRESS,    // 长按
 } KeyEvent_t;
 
 /* 按键信息结构体 */
+#pragma pack(push,1)
 typedef struct
 {
+    uint16_t long_press_cnt; // 长按计数
     uint8_t keyState;       // 当前按键引脚电平（1=释放, 0=按下）
-    uint8_t state;          // 状态机当前状态
-    uint8_t singleFlag;     // 单击标志（兼容旧接口，由 key_scan 置位）
     uint8_t debounce_cnt;   // 消抖计数
-    uint8_t long_press_cnt; // 长按计数
+    uint8_t long_press_send;//限制长按事件只触发一次
 } Key;
-
+#pragma pack(pop)
 /**
  * @brief  按键扫描状态机，需在主循环中周期性调用（推荐 1ms）
  * @return 本次扫描产生的按键事件（KEY_EVENT_NONE 表示无事件）

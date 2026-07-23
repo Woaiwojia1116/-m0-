@@ -40,20 +40,20 @@ void PID_Pro(PID *test,uint8_t flag)
 		// {
 		if(!flag)
 		{
-			if(fabs(test->Error0)<60)   //积分分离，防止Ki的超调
+			if(fabs(test->Error0)<10)   //积分分离，防止Ki的超调
 			{
 				test->Errorsum += test->Error0; 
 			}
 			else
 				test->Errorsum = 0;			
 		}
-			if(test->Errorsum>500)
+			if(test->Errorsum>100)
             {
-                (test->Errorsum = 500);    //积分限幅
+                (test->Errorsum = 100);    //积分限幅
             }
-			if(test->Errorsum<-500)
+			if(test->Errorsum<-100)
             {
-                (test->Errorsum = -500);
+                (test->Errorsum = -100);
             }
 			test->out = test->Kp * test->Error0 + test->Ki * test->Errorsum + test->Kd * (test->Error0 - test->Error1);
 			
