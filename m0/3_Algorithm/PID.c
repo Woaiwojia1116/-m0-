@@ -40,7 +40,7 @@ void PID_Pro(PID *test,uint8_t flag)
 		// {
 		if(!flag)
 		{
-			if(fabs(test->Error0)<10)   //积分分离，防止Ki的超调
+			if(fabs(test->Error0)<3)   //积分分离，防止Ki的超调
 			{
 				test->Errorsum += test->Error0; 
 			}

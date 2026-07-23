@@ -49,7 +49,7 @@ uint8_t MPU6050_Init(void)
     // 配置采样率分频
     IIC_Write_REG(MPU6050_ADDR_AD0_LOW, SMPLRT_DIV, 0x07);
     // 配置低通滤波器
-    IIC_Write_REG(MPU6050_ADDR_AD0_LOW, CONFIG, 0x06);
+    IIC_Write_REG(MPU6050_ADDR_AD0_LOW, CONFIG, 0x00);
     // 配置陀螺仪量程：±250°/s
     IIC_Write_REG(MPU6050_ADDR_AD0_LOW, GYRO_CONFIG, 0x00);
     // 配置加速度计量程：±2g
