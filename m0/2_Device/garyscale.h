@@ -4,5 +4,6 @@
 #include "delay.h"
 void XunJi(uint8_t *data);
 uint8_t gw_gray_serial_read();
+extern uint8_t NOLineFlag;
 
 #endif

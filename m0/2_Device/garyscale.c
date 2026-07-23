@@ -2,6 +2,7 @@
 #include "allcontrol.h"
 #include "ti_msp_dl_config.h"
 uint8_t NOLineFlag=1;
+uint8_t SharpTurnFlag=0;   // 急弯标志（1=急弯，关闭陀螺仪输出）
 
 #define STEER_GAIN 0.8
 
@@ -41,7 +42,6 @@ uint8_t gw_gray_serial_read()
 			DL_GPIO_setPins(GrayScale_CLK_PORT,GrayScale_CLK_PIN_28_PIN);
 			delay_us(4);
 		}		
-		ret = ~ret;
 	return ret;  
 }
 
@@ -68,20 +68,21 @@ float LinearInterpolation(float x) {
     return 0.0; // 正常情况下不会执行到这里
 }
 
-// 改造后的循迹函数（带失线主动找回）
-void XunJi(uint8_t *data) {
-    static float last_valid_deviation = 0.0;  // 保存上一次有效偏差（用于失线时判断方向）
+
+void XunJi(uint8_t *data) 
+{
+    // static float last_valid_deviation = 0.0;  // 保存上一次有效偏差（用于失线时判断方向）
     float deviation = 0.0;                    // 当前计算出的连续偏差值
 
-    // // --- 1. 失线检测（简化：立即响应，无延迟） ---
-    // if (data[0]==0 && data[1]==0 && data[2]==0 && data[3]==0 &&
-    //     data[4]==0 && data[5]==0 && data[6]==0 && data[7]==0) {
-    //     // 全0 → 失线
-    //     NOLineFlag = 1;
-    // } else {
-    //     // 有任何一个传感器亮 → 有线
-    //     NOLineFlag = 0;
-    // }
+    // --- 1. 失线检测（简化：立即响应，无延迟） ---
+    if (data[0]==0 && data[1]==0 && data[2]==0 && data[3]==0 &&
+        data[4]==0 && data[5]==0 && data[6]==0 && data[7]==0) {
+        // 全0 → 失线
+        NOLineFlag = 1;
+    } else {
+        // 有任何一个传感器亮 → 有线
+        NOLineFlag = 0;
+    }
 
     // --- 2. 计算连续偏差值 deviation ---
     float sumPosition = 0.0;
@@ -98,17 +99,27 @@ void XunJi(uint8_t *data) {
     if (activeCount > 0) {
         // 有线：计算平均位置作为偏差，并保存为有效值
         deviation = sumPosition / activeCount;
-        last_valid_deviation = deviation;   // 更新上一次有效偏差
-    } else {
-        // 失线：根据上一次有效偏差的方向，强制输出最大反向偏差（用于找回赛道）
-        if (last_valid_deviation > 0) {
-            // 上一次偏差为正（偏右），说明小车在赛道右侧丢失 → 应向左猛转（输出负值）
-            deviation = -4.5;
-        } else if (last_valid_deviation < 0) {
-            // 上一次偏差为负（偏左），说明小车在赛道左侧丢失 → 应向右猛转（输出正值）
-            deviation = 4.5;
-        }
-    }
+        // last_valid_deviation = deviation;   // 更新上一次有效偏差
+        NOLineFlag = 0;                     // 有线标志
+        // 急弯判断：靠边的倒数第二个传感器（index 1 或 6）检测到线 → 关闭陀螺仪
+        // if (data[1] == 1 || data[6] == 1) {
+        //     SharpTurnFlag = 1;
+        // } else {
+        //     SharpTurnFlag = 0;
+        // }
+    } 
+    // else {
+    //     // 失线：根据上一次有效偏差的方向，强制输出最大反向偏差（用于找回赛道）
+    //     NOLineFlag = 1;                     // 失线标志
+    //     xunji_PID.out = 0;                 // 失线时循迹PID输出清零
+    //     if (last_valid_deviation > 0) {
+    //         // 上一次偏差为正（偏右），说明小车在赛道右侧丢失 → 应向左猛转（输出负值）
+    //         deviation = -4.5;
+    //     } else if (last_valid_deviation < 0) {
+    //         // 上一次偏差为负（偏左），说明小车在赛道左侧丢失 → 应向右猛转（输出正值）
+    //         deviation = 4.5;
+    //     }
+    // }
 
     // --- 3. 线性插值映射为PID控制量（乘以增益） ---
     xunji_PID.Actual = STEER_GAIN * LinearInterpolation(deviation);
