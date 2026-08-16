@@ -13,7 +13,7 @@ import cv_lite
 W, H = 640, 480; IMG = [H, W]
 
 # 串口初始化 (115200波特率 GPIO9=TX, GPIO10=RX)
-uart = UART(1, baudrate=115200, tx=9, rx=10)
+uart = UART(1, baudrate=460800, tx=9, rx=10)
 # 降低串口发送频率
 count = 0
 
